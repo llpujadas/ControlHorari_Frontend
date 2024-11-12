@@ -1,0 +1,14 @@
+
+@layer components {
+    h1 {
+      @apply text-black/70 font-semibold font-semibold text-2xl !important
+    }
+
+    .divider {
+        @apply my-0
+    }
+
+    svg {
+      @apply size-6
+    }
+  }
