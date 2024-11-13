@@ -12,26 +12,36 @@ import {
   ActionFunctionArgs,
   LoaderFunctionArgs,
 } from "@remix-run/server-runtime";
-import { createCheckin } from "~/backend/controllers/checkin.controller.server";
+import {
+  createCheckin,
+  getCheckin,
+} from "~/backend/controllers/checkin.controller.server";
 import { Checkin, CheckinDto } from "~/backend/models/Checkin";
 import LoaderComponent from "~/components/Loader/Loader";
 import { toast } from "~/hooks/use-toast";
 import { commitSession, getSession } from "~/backend/server/session.server";
 import { Link, useLoaderData } from "@remix-run/react";
 import { FiLogOut } from "react-icons/fi";
+import { redirect } from "@remix-run/node"; // or cloudflare/deno
+import { useNavigate } from "@remix-run/react";
+
+type HoresMinutsType = {
+  hores: number;
+  minuts: number;
+};
+
+interface Coordinates {
+  latitude: number;
+  longitude: number;
+}
 
 export async function action({ request, params }: ActionFunctionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
+  const formData = await request.formData();
+  const checkin = formData.get("checkin") as string;
+  const newCheckin = JSON.parse(checkin) as CheckinDto;
 
-  const fitxada: CheckinDto = {
-    userId: 1,
-    checkinType: "SORTIDA",
-    latitud: "20.12.12",
-    longitud: "10.12.12",
-    deviceInfo: "MACOS LLUIS",
-  };
-
-  const res = await createCheckin(request, fitxada);
+  const res = await createCheckin(request, newCheckin);
 
   session.flash("fitxadaInserida", "fitxadaInserida");
   return json(".", {
@@ -41,37 +51,44 @@ export async function action({ request, params }: ActionFunctionArgs) {
   });
 }
 
-export async function loader({ request, params }: LoaderFunctionArgs) {
+export async function loader({ request }: LoaderFunctionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
   const fitxadaInserida = session.get("fitxadaInserida") || null;
+  const dateParams = new URL(request.url).searchParams.get("date");
+  let date: Date = new Date();
 
-  // Commit the session to remove the error
+  if (dateParams) {
+    date = new Date(dateParams);
+  }
+
+  const todayCheckin = await getCheckin(request, formatDataSeleccionada(date));
+  
   const headers = new Headers();
   if (fitxadaInserida) {
     session.unset("fitxadaInserida");
     headers.append("Set-Cookie", await commitSession(session));
   }
 
-  return json({ fitxadaInserida }, { headers });
+  return json({ fitxadaInserida, todayCheckin }, { headers });
 }
 
-type HoresMinutsType = {
-  hores: number;
-  minuts: number;
-};
 
 export default function Dashboard() {
   // LOADER ========================================
-  const { fitxadaInserida } = useLoaderData<{
+  const { fitxadaInserida, todayCheckin } = useLoaderData<{
     fitxadaInserida: any;
+    todayCheckin: Checkin[];
   }>();
 
   // HOOKS =========================================
   const fetcher = useFetcher();
+  const navigate = useNavigate();
 
   // STATES ========================================
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [registreFitxades, setRegistreFitxades] = useState<Checkin[]>([]);
+  const [registreFitxades, setRegistreFitxades] = useState<Checkin[] | []>(
+    todayCheckin
+  );
   const [horesMinutsTotals, setHoresMinutsTotals] = useState<HoresMinutsType>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -106,24 +123,54 @@ export default function Dashboard() {
     setHoresMinutsTotals({ hores: totalHours, minuts: totalMinutes });
   }
 
+  async function insertNewCheckin() {
+    const ua = navigator.userAgent;
+    const { latitude, longitude } = await getCoords();
+
+    const checkin: CheckinDto = {
+      userId: 1,
+      checkinType: "ENTRADA",
+      deviceInfo: ua,
+      latitud: String(latitude),
+      longitud: String(longitude),
+    };
+
+    if (!fetcher) return;
+
+    const formData = new FormData();
+    formData.append("checkin", JSON.stringify(checkin));
+
+    fetcher.submit(formData, { method: "POST", action: "." });
+  }
+
+  async function getCoords(): Promise<Coordinates> {
+    return new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const latitude = position.coords.latitude;
+          const longitude = position.coords.longitude;
+          console.log({ latitude, longitude });
+          resolve({ latitude, longitude });
+        },
+        (error) => {
+          console.error(error);
+          reject(error);
+        }
+      );
+    });
+  }
+
   // EFFECTS ========================================
   useEffect(() => {
-    setIsLoading(true);
-    fetcher.load(
-      `/resources/checkin?dataSeleccionada=${formatDataSeleccionada(date!)}`
-    );
+    if (!date) return;
+    navigate(`?date=${formatDataSeleccionada(date)}`)
   }, [date]);
 
   useEffect(() => {
-    if (fetcher.data) {
-      setRegistreFitxades(fetcher.data as Checkin[]);
-      setIsLoading(false);
-    }
-  }, [fetcher]);
-
-  useEffect(() => {
+    setRegistreFitxades(todayCheckin);
     calcularHoresTreballades();
-  }, [registreFitxades]);
+    setIsLoading(false);
+  }, [todayCheckin]);
 
   useEffect(() => {
     toast({
@@ -133,7 +180,7 @@ export default function Dashboard() {
 
   return (
     <>
-      <Form method="POST" action=".">
+      <Form>
         <div className="h-screen flex-col gap-2 w-full flex items-center justify-center bg-gradient-to-b from-gray-50 to-gray-300">
           <div className="relative p-4">
             <div className="bg-white shadow-lg h-[500px] w-auto rounded-2xl p-6">
@@ -161,10 +208,12 @@ export default function Dashboard() {
 
               <div id="fitxar" className="w-full pb-2">
                 <button
+                  type="button"
                   id="btn-fitxar"
                   name="fitxar"
                   className="btn color-accent w-full text-white"
                   disabled={!isToday}
+                  onClick={() => insertNewCheckin()}
                 >
                   {`Fitxar ${
                     registreFitxades.length == 0
