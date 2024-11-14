@@ -21,7 +21,7 @@ import LoaderComponent from "~/components/Loader/Loader";
 import { toast } from "~/hooks/use-toast";
 import { commitSession, getSession } from "~/backend/server/session.server";
 import { Link, useLoaderData } from "@remix-run/react";
-import { FiLogOut } from "react-icons/fi";
+import { FiLogOut, FiUsers } from "react-icons/fi";
 import { redirect } from "@remix-run/node"; // or cloudflare/deno
 import { useNavigate } from "@remix-run/react";
 
@@ -98,21 +98,20 @@ export default function Dashboard() {
 
   // FUNCTIONS ======================================
   function calcularHoresTreballades() {
-    // Filtrar registros de entrada y salida
-    const entradas = registreFitxades.filter(
+    const entrades = registreFitxades.filter(
       (record) => record.checkinType === "ENTRADA"
     );
-    const salidas = registreFitxades.filter(
+    const sortides = registreFitxades.filter(
       (record) => record.checkinType === "SORTIDA"
     );
 
-    const totalPairs = Math.min(entradas.length, salidas.length);
+    const totalPairs = Math.min(entrades.length, sortides.length);
 
     let totalTimeWorkedMs = 0;
     for (let i = 0; i < totalPairs; i++) {
-      const entradaTime: any = new Date(entradas[i].timestamp);
-      const salidaTime: any = new Date(salidas[i].timestamp);
-      totalTimeWorkedMs += salidaTime - entradaTime; // Diferencia en milisegundos
+      const entradaTime: any = new Date(entrades[i].timestamp);
+      const sortidaTime: any = new Date(sortides[i].timestamp);
+      totalTimeWorkedMs += sortidaTime - entradaTime;
     }
 
     const totalHours = Math.floor(totalTimeWorkedMs / (1000 * 60 * 60));
@@ -168,15 +167,19 @@ export default function Dashboard() {
 
   useEffect(() => {
     setRegistreFitxades(todayCheckin);
-    calcularHoresTreballades();
     setIsLoading(false);
   }, [todayCheckin]);
 
   useEffect(() => {
+    if (!fitxadaInserida) return;
     toast({
       description: "La fitxada s'ha guardat correctament.",
     });
   }, [fitxadaInserida]);
+
+  useEffect(() => {
+    calcularHoresTreballades();
+  }, [registreFitxades])
 
   return (
     <>
@@ -190,8 +193,16 @@ export default function Dashboard() {
 
               <div className="absolute tabsolute top-2 right-1">
                 <Link to={"/logout"}>
+                  <button className="btn color-error opacity-80 hover:opacity-100 transition-all btn-circle flex items-center justify-center">
+                    <FiLogOut className="text-white" />
+                  </button>
+                </Link>
+              </div>
+
+              <div className="absolute tabsolute top-16 right-1">
+                <Link to={"/users/management"}>
                   <button className="btn color-accent opacity-80 hover:opacity-100 transition-all btn-circle flex items-center justify-center">
-                    <FiLogOut />
+                    <FiUsers className="text-white" />
                   </button>
                 </Link>
               </div>

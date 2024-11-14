@@ -1,4 +1,4 @@
-import { LinksFunction, LoaderFunctionArgs, redirect } from "@remix-run/node";
+import { LinksFunction, LoaderFunctionArgs, json, redirect } from "@remix-run/node";
 import {
   Links,
   Meta,
@@ -9,7 +9,6 @@ import {
 } from "@remix-run/react";
 import stylesheet from "~/tailwind.css?url";
 import { getToken } from "./backend/config/session.config";
-import Sidebar from "./components/Sidebar";
 import { Toaster } from "./components/ui/toaster";
 
 export const links: LinksFunction = () => [
@@ -18,18 +17,21 @@ export const links: LinksFunction = () => [
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const token = await getToken(request);
+  const url = new URL(request.url);
 
-  console.log("TOKEN", token);
-
-  if (!token && !request.url.includes("login")) {
-    return redirect("/login");
+  if (!token && url.pathname == "/login"){
+    return json({});
   }
 
-  if (token && !request.url.includes("dashboard")) {
+  if (!token && url.pathname !== "/login"){
+    return redirect("/login");
+  }
+  
+  if (token && url.pathname == "/" || url.pathname == "/login")  {
     return redirect("/dashboard");
   }
 
-  return {};
+  return json({});
 }
 
 export default function Layout() {

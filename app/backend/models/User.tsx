@@ -9,16 +9,22 @@
 // }
 
 export type User = {
-    "id": number;
-    "fullName": string;
-    "email": string;
-    "password": string;
-    "createdAt": string;
-    "updatedAt": string;
-    "enabled": boolean,
-    "accountNonExpired": boolean,
-    "accountNonLocked": boolean,
-    "credentialsNonExpired": boolean,
-    "username": string,
-    "authorities": []
-}
+  id: number;
+  fullName: string;
+  email: string;
+  password: string;
+  createdAt: string;
+  updatedAt: string;
+  enabled: boolean;
+  accountNonExpired: boolean;
+  accountNonLocked: boolean;
+  credentialsNonExpired: boolean;
+  username: string;
+  authorities: [];
+};
+
+export type NewUserDto = {
+  email: string;
+  fullName: string;
+  password: string;
+};

@@ -71,6 +71,10 @@
     @apply bg-[#2fa5b2] !important;
   }
 
+  .color-error {
+    @apply bg-[#d41f1f] !important;
+  }
+
   .text-color-accent {
     @apply text-[#2fa5b2] !important;
   }
