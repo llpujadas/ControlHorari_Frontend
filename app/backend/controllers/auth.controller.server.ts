@@ -5,16 +5,15 @@ interface AuthResponse {
   token: string;
 }
 
+// CREATE ==============================================================================================================
 export const authenticate = async (request : Request, email: string, password: string): Promise<string | undefined> => {
   const response = await handleFetch<any,  AuthResponse>({
     request,
     controller: 'auth',
     endpoint: '/login',
     method: 'POST',
-    body: { email, password}
+    body: { email, password }
   });
-
-  console.log(response);
   
   return response.data?.token;
 };

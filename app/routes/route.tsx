@@ -1,6 +1,5 @@
-import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
-import { Outlet, redirect } from "@remix-run/react";
-import { getToken } from "~/backend/config/session.config";
+import type { MetaFunction } from "@remix-run/node";
+import { Outlet } from "@remix-run/react";
 
 export const meta: MetaFunction = () => {
   return [
@@ -8,20 +7,6 @@ export const meta: MetaFunction = () => {
     { name: "description", content: "Welcome to Remix!" },
   ];
 };
-
-// export async function loader({ request, params }: LoaderFunctionArgs) {
-//   const token = await getToken(request);
-
-//   console.log("TOKEN", token);
-  
-//   if (!token && !request.url.includes("/dashboard")) {
-//     return redirect("/login");
-//   } else {
-//     return redirect("/dashboard");
-//   }
-
-//   return {};
-// }
 
 export default function Index() {
   return (

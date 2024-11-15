@@ -2,19 +2,19 @@ import { ActionFunctionArgs, LoaderFunctionArgs, json } from "@remix-run/node";
 import {
   Form,
   useLoaderData,
-  useFetcher,
   useNavigate,
   Link,
 } from "@remix-run/react";
 import { useEffect, useState } from "react";
 import { MdAdd, MdArrowBack } from "react-icons/md";
 import {
-  createUser,
+  createUpdateUser,
   getAllUsers,
   getUserById,
 } from "~/backend/controllers/user.controller.server";
 import { NewUserDto, User } from "~/backend/models/User";
 
+// LOADER =============================================================
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const userId = params.userId;
   const [selectedUser, users] = await Promise.all([
@@ -25,6 +25,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   return json({ selectedUser, users });
 }
 
+// ACTION =============================================================
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
 
@@ -34,13 +35,13 @@ export async function action({ request }: ActionFunctionArgs) {
     password: formData.get("password") as string,
   };
 
-  const res = await createUser(request, newUser); // Aquesta funció hauria de gestionar la creació de l'usuari a la base de dades
+  await createUpdateUser(request, newUser);
 
   return json({});
 }
 
 export default function Usuaris() {
-  // LOADER =============================================
+  // LOADER DATA ========================================
   const { selectedUser, users } = useLoaderData<{
     selectedUser: User;
     users: User[];

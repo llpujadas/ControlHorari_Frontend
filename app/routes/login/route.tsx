@@ -10,6 +10,7 @@ import { useLoaderData, useRouteError } from "@remix-run/react";
 import { commitSession, getSession } from "~/backend/server/session.server";
 import { FiX } from "react-icons/fi";
 
+// ACTION ======================================================================
 export async function action({ request, params }: ActionFunctionArgs) {
   const formData = await request.formData();
   const email = formData.get("email") as string;
@@ -33,6 +34,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
   return redirect("/dashboard", { headers });
 }
 
+// LOADER ======================================================================
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const session = await getSession(request.headers.get("Cookie"));
   const error = session.get("error") || null;
@@ -48,9 +50,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
 };
 
 export default function LoginPage() {
-  const { error } = useLoaderData<{
-    error: any;
-  }>();
+  const { error } = useLoaderData<{error: any}>();
 
   return (
     <section className="bg-white dark:bg-gray-900 h-screen flex items-center justify-center p-4">

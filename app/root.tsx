@@ -5,7 +5,6 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-  useLocation,
 } from "@remix-run/react";
 import stylesheet from "~/tailwind.css?url";
 import { getToken } from "./backend/config/session.config";
@@ -15,10 +14,11 @@ export const links: LinksFunction = () => [
   { rel: "stylesheet", href: stylesheet },
 ];
 
+// LOADER ======================================================================
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const token = await getToken(request);
   const url = new URL(request.url);
-
+  
   if (!token && url.pathname == "/login"){
     return json({});
   }
@@ -35,13 +35,10 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 }
 
 export default function Layout() {
-  const location = useLocation();
-
   return (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
-        {/* <meta name="viewport" content="width=device-width, initial-scale=1" /> */}
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
@@ -56,7 +53,6 @@ export default function Layout() {
       </head>
       <body>
         <div className="app-container flex">
-          {/* {!location.pathname.includes("login") && <Sidebar />} */}
 
           <main className="flex-grow bg-white">
             <Outlet />

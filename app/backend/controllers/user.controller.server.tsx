@@ -1,13 +1,13 @@
 import { handleFetch } from "../config/fetch-config";
-import { Checkin, CheckinDto } from "../models/Checkin";
 import { NewUserDto, User } from "../models/User";
 
+export type ResponseCreateUpdateUser = User;
 export type ResponseGetAllUsers = User[];
 export type ResponseGetUser = User;
 
 // CREATE ================================================================================
-export const createUser = async (request: Request, user: NewUserDto): Promise<any> => {
-  const response = await handleFetch<any>({
+export const createUpdateUser = async (request: Request, user: NewUserDto): Promise<ResponseCreateUpdateUser> => {
+  const response = await handleFetch<NewUserDto, ResponseCreateUpdateUser>({
     request,
     controller: 'user',
     endpoint: `/upsert`,

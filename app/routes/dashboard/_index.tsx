@@ -22,7 +22,6 @@ import { toast } from "~/hooks/use-toast";
 import { commitSession, getSession } from "~/backend/server/session.server";
 import { Link, useLoaderData } from "@remix-run/react";
 import { FiLogOut, FiUsers } from "react-icons/fi";
-import { redirect } from "@remix-run/node"; // or cloudflare/deno
 import { useNavigate } from "@remix-run/react";
 
 type HoresMinutsType = {
@@ -35,6 +34,7 @@ interface Coordinates {
   longitude: number;
 }
 
+// ACTION ========================================================
 export async function action({ request, params }: ActionFunctionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
   const formData = await request.formData();
@@ -51,6 +51,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
   });
 }
 
+// LOADER ========================================================
 export async function loader({ request }: LoaderFunctionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
   const fitxadaInserida = session.get("fitxadaInserida") || null;
@@ -72,7 +73,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
   return json({ fitxadaInserida, todayCheckin }, { headers });
 }
 
-
 export default function Dashboard() {
   // LOADER ========================================
   const { fitxadaInserida, todayCheckin } = useLoaderData<{
@@ -86,9 +86,7 @@ export default function Dashboard() {
 
   // STATES ========================================
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [registreFitxades, setRegistreFitxades] = useState<Checkin[] | []>(
-    todayCheckin
-  );
+  const [registreFitxades, setRegistreFitxades] = useState<Checkin[] | []>(todayCheckin);
   const [horesMinutsTotals, setHoresMinutsTotals] = useState<HoresMinutsType>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
